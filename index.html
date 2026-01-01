@@ -553,5 +553,23 @@
             }, 2000);
         });
     </script>
+    <script>
+  function isInstalledPWA() {
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.navigator.standalone === true;
+  }
+
+  window.addEventListener('load', () => {
+    if (isInstalledPWA()) {
+      console.log("✅ FinTodo berjalan sebagai PWA / Play Store");
+      document.body.classList.add('is-pwa');
+    } else {
+      console.log("🌐 FinTodo dibuka via browser");
+      document.body.classList.add('is-browser');
+    }
+  });
+</script>
+</body>
 </body>
 </html>
