@@ -6,9 +6,7 @@ const STATIC_ASSETS = [
   '/fintodo/manifest.json',
   '/fintodo/logo_app.png',
   '/fintodo/css/style.css',
-  '/fintodo/js/app.js',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  '/fintodo/js/app.js'
 ];
 
 // INSTALL
@@ -19,35 +17,36 @@ self.addEventListener('install', event => {
   );
 });
 
-// ACTIVATE (hapus cache lama)
+// ACTIVATE
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      )
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-// FETCH (STRATEGY: Cache First → Network Fallback)
+// FETCH
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then(res => {
-      return (
-        res ||
-        fetch(event.request)
-          .then(networkRes => {
-            return caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, networkRes.clone());
-              return networkRes;
-            });
-          })
-          .catch(() => caches.match('/fintodo/index.html'))
-      );
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(event.request)
+        .then(networkRes => {
+          // CDN & external tetap dicache DI SINI (aman)
+          if (event.request.url.startsWith('http')) {
+            const clone = networkRes.clone();
+            caches.open(CACHE_NAME).then(cache =>
+              cache.put(event.request, clone)
+            );
+          }
+          return networkRes;
+        })
+        .catch(() => caches.match('/fintodo/index.html'));
     })
   );
 });
