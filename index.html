@@ -290,7 +290,7 @@ if ("serviceWorker" in navigator) {
         let adCallback = null;
 
         // --- INIT & LOADING SCREEN (2 DETIK) ---
-        window.addEventListener('load', () => {
+        window.addEventListener('DOMContentLoaded', () => {
             if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
             window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
             window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
@@ -313,7 +313,7 @@ if ("serviceWorker" in navigator) {
                 } catch (e) {
                     skipToOffline();
                 }
-            }, 500); // 0,5 DETIK
+            }
         });
 
         // --- SYSTEM EVENT ---
