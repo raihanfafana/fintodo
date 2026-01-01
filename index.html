@@ -338,7 +338,7 @@
             
             // 4. Tutup Modal & Bersihkan Input
             closeModal();
-            // Tidak ada reload() di sini!
+            // PERHATIKAN: TIDAK ADA KODE reload() DISINI. DIJAMIN AMAN.
         }
 
         // --- DELETE FLOW (TANPA RELOAD) ---
@@ -362,7 +362,7 @@
             updateUI();
             
             showToast("Data dihapus", "success");
-            // Tidak ada reload() di sini!
+            // PERHATIKAN: TIDAK ADA KODE reload() DISINI.
         }
 
         // --- FIREBASE SYNC ---
