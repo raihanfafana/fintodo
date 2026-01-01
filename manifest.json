@@ -1,5 +1,5 @@
 {
-  "name": "FinTodo",
+  "name": "FinTodo - Catatan Keuangan",
   "short_name": "FinTodo",
   "description": "Aplikasi pencatat keuangan sederhana untuk mencatat pemasukan dan pengeluaran harian secara offline maupun online.",
   "start_url": "/fintodo/",
