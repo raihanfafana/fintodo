@@ -5,39 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FinTodo</title>
     <link rel="manifest" href="/fintodo/manifest.json">
-<meta name="theme-color" content="#121212">
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/fintodo/service-worker.js");
-}
-</script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#121212">
+    
+    <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/fintodo/service-worker.js");
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js" defer></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         
-        :root {
-            --bg: #09090b; --card: #18181b; --input: #27272a; --text: #f4f4f5; 
-            --primary: #bef264; --border: rgba(255,255,255,0.1);
-        }
-        .light-mode {
-            --bg: #f8fafc; --card: #ffffff; --input: #f1f5f9; --text: #0f172a; --border: rgba(0,0,0,0.1);
-        }
+        :root { --bg: #09090b; --card: #18181b; --input: #27272a; --text: #f4f4f5; --primary: #bef264; --border: rgba(255,255,255,0.1); }
+        .light-mode { --bg: #f8fafc; --card: #ffffff; --input: #f1f5f9; --text: #0f172a; --border: rgba(0,0,0,0.1); }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; -webkit-tap-highlight-color: transparent; transition: 0.3s; }
 
-        /* LOADING SCREEN (CLEAN FULLSCREEN) */
-        #loading-screen { 
-            position: fixed; inset: 0; background: #000; z-index: 9999; 
-            display: flex; align-items: center; justify-content: center; 
-        }
-        #loading-screen img { 
-            width: 100%; height: 100%; object-fit: contain;
-        }
+        /* LOADING SCREEN */
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        #loading-screen img { width: 100%; height: 100%; object-fit: contain; }
 
         /* AUTH SCREEN */
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 90; display: none; flex-direction: column; justify-content: center; padding: 24px; }
@@ -46,7 +38,6 @@ if ("serviceWorker" in navigator) {
         /* UI ELEMENTS */
         .app-input { width: 100%; background: #27272a; color: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; outline: none; border: 1px solid transparent; font-size: 14px; }
         .app-input:focus { border-color: var(--primary); }
-
         .btn-primary { width: 100%; background: var(--primary); color: black; font-weight: 800; padding: 16px; border-radius: 12px; margin-top: 8px; font-size: 14px; text-transform: uppercase; }
         .btn-secondary { width: 100%; background: transparent; color: #71717a; padding: 12px; font-size: 12px; margin-top: 12px; }
 
@@ -54,7 +45,6 @@ if ("serviceWorker" in navigator) {
         .page.active { display: block; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* NAV BAR */
         .nav-bar { position: fixed; bottom: 20px; left: 16px; right: 16px; height: 70px; background: rgba(24,24,27,0.95); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 50; }
         .nav-item { text-align: center; color: #71717a; font-size: 10px; font-weight: 700; transition: 0.2s; width: 25%; }
         .nav-item.active { color: var(--primary); transform: translateY(-2px); }
@@ -63,22 +53,9 @@ if ("serviceWorker" in navigator) {
         .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); transition: 0.2s; }
         .card:active { transform: scale(0.98); opacity: 0.8; }
 
-        /* BANNER */
-        .banner-event { 
-            background: linear-gradient(90deg, #bef264, #a3e635); 
-            border-radius: 20px; padding: 16px; margin-bottom: 24px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            cursor: pointer; box-shadow: 0 10px 20px rgba(190, 242, 100, 0.2);
-            position: relative; overflow: hidden;
-        }
+        .banner-event { background: linear-gradient(90deg, #bef264, #a3e635); border-radius: 20px; padding: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-shadow: 0 10px 20px rgba(190, 242, 100, 0.2); position: relative; overflow: hidden; }
+        .iframe-box { width: 100%; height: calc(100vh - 140px); border: 0; border-radius: 20px; background: #fff; margin-top: 10px; }
         
-        /* IFRAME CONTAINER */
-        .iframe-box { 
-            width: 100%; height: calc(100vh - 140px); border: 0; 
-            border-radius: 20px; background: #fff; margin-top: 10px;
-        }
-        
-        /* TOAST */
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
         .toast { background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 12px; display: flex; items-center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
@@ -92,7 +69,6 @@ if ("serviceWorker" in navigator) {
         @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .ad-timer-bar { width: 100%; height: 6px; background: #eee; position: absolute; top: 0; left: 0; z-index: 10; }
         .ad-timer-fill { height: 100%; background: #bef264; width: 0%; transition: width 0.1s linear; }
-        
         .web-ad-frame { width: 100%; height: 100%; border: 0; pointer-events: none; }
     </style>
 </head>
@@ -111,17 +87,14 @@ if ("serviceWorker" in navigator) {
             </div>
             <h2 class="text-2xl font-black text-white mb-1 text-center">Selamat Datang</h2>
             <p class="text-xs text-zinc-400 mb-6 text-center">Login untuk sinkronisasi & event</p>
-            
             <input type="email" id="email" placeholder="Email" class="app-input">
             <input type="password" id="password" placeholder="Password" class="app-input">
-            
             <button onclick="handleAuth()" id="btn-login" class="btn-primary">MASUK / DAFTAR</button>
             <button onclick="skipToOffline()" class="btn-secondary">Gunakan Mode Offline</button>
         </div>
     </div>
 
     <main id="app-main" style="display: none;">
-        
         <section id="beranda" class="page active">
             <header class="flex justify-between items-center mb-6">
                 <div>
@@ -135,7 +108,6 @@ if ("serviceWorker" in navigator) {
                     </div>
                 </div>
             </header>
-
             <div class="card mb-6 bg-gradient-to-br from-zinc-900 to-black relative overflow-hidden">
                 <div class="absolute right-0 top-0 opacity-10 p-4"><img src="logo_app.png" class="w-24 h-24 object-contain" onerror="this.style.display='none'"></div>
                 <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest relative z-10">Total Aset</p>
@@ -144,7 +116,6 @@ if ("serviceWorker" in navigator) {
                     <h2 id="balance-display" class="text-4xl font-black text-white">0</h2>
                 </div>
             </div>
-
             <div onclick="openEventPage()" class="banner-event">
                 <div>
                     <p class="text-black text-[10px] font-black uppercase mb-1">Event Berhadiah</p>
@@ -154,7 +125,6 @@ if ("serviceWorker" in navigator) {
                     <i class="fas fa-gift animate-bounce"></i>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <button onclick="openModal('in')" class="card py-6 flex flex-col items-center hover:bg-zinc-800 active:scale-95 transition">
                     <div class="w-10 h-10 rounded-full bg-lime-400/10 flex items-center justify-center text-lime-400 mb-2"><i class="fas fa-arrow-down"></i></div>
@@ -165,7 +135,6 @@ if ("serviceWorker" in navigator) {
                     <span class="text-xs font-bold">Pengeluaran</span>
                 </button>
             </div>
-
             <h3 class="font-bold text-sm mb-4">Aktifitas Terakhir</h3>
             <div id="home-history" class="space-y-3"></div>
         </section>
@@ -180,7 +149,6 @@ if ("serviceWorker" in navigator) {
                 <button onclick="showPage('beranda')" class="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-white"><i class="fas fa-chevron-left"></i></button>
                 <h2 class="text-xl font-black text-white">Event Berhadiah</h2>
             </div>
-            
             <div id="event-container" class="w-full">
                 <div id="offline-msg" class="hidden flex-col items-center justify-center h-64 text-center">
                     <i class="fas fa-wifi-slash text-4xl text-zinc-600 mb-4"></i>
@@ -199,7 +167,6 @@ if ("serviceWorker" in navigator) {
                 <h2 id="user-display" class="font-bold text-lg">User Offline</h2>
                 <p id="sync-status" class="text-xs text-red-400 mt-1 font-mono">Not Synced</p>
             </div>
-
             <div class="space-y-3">
                 <div class="card flex justify-between items-center opacity-75">
                     <div class="flex items-center gap-3"><i class="fas fa-cloud text-lime-400"></i><span class="text-sm font-bold">Auto Sync (Data App)</span></div>
@@ -209,7 +176,6 @@ if ("serviceWorker" in navigator) {
                     <div class="flex items-center gap-3"><i class="fas fa-sign-out-alt"></i><span class="text-sm font-bold">Keluar / Reset</span></div>
                 </div>
             </div>
-            
             <div class="mt-12 text-center space-y-3 pb-8">
                 <a href="mailto:hanraix.corp@gmail.com" class="block text-xs text-zinc-500 font-bold opacity-60 hover:opacity-100 hover:text-lime-400 transition">Hubungi Kami</a>
                 <a href="https://hanraixcorporation.vercel.app/tentangkami.html" target="_blank" class="inline-block bg-zinc-800 text-lime-400 px-5 py-2.5 rounded-full text-xs font-bold shadow-lg border border-lime-400/20 active:scale-95 transition">
@@ -232,11 +198,9 @@ if ("serviceWorker" in navigator) {
                 <h3 id="m-title" class="font-black text-xl text-white">Input Data</h3>
                 <button id="btn-delete" onclick="confirmDelete()" class="text-red-500 text-xs font-bold hidden"><i class="fas fa-trash"></i> Hapus</button>
             </div>
-            
             <input type="text" id="m-name" placeholder="Keterangan (Contoh: Gaji)" class="app-input">
             <input type="date" id="m-date" class="app-input">
             <input type="number" id="m-amount" placeholder="Jumlah (Rp)" class="app-input">
-            
             <div class="flex gap-4 mt-4">
                 <button onclick="closeModal()" class="flex-1 py-4 font-bold text-zinc-500">Batal</button>
                 <button onclick="initSaveProcess()" id="btn-save" class="flex-[2] bg-lime-400 text-black rounded-xl font-bold">SIMPAN</button>
@@ -289,43 +253,10 @@ if ("serviceWorker" in navigator) {
         let isOnline = navigator.onLine;
         let adCallback = null;
 
-        
-
-        // --- SYSTEM EVENT ---
+        // --- SYSTEM EVENT (SUDAH DIPERBAIKI) ---
         function openEventPage() {
             const frame = document.getElementById('event-frame');
-            con        // --- INIT & LOADING SCREEN (VERSI INSTAN / NGEBUT) ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Set tema & listener status internet
-            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-            window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
-            window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
-
-            // 2. LANGSUNG JALAN (Tanpa setTimeout)
-            try {
-                // Pastikan script firebase sudah terload
-                if (navigator.onLine && typeof firebase !== 'undefined') {
-                    firebase.initializeApp(firebaseConfig);
-                    
-                    // Cek login user
-                    firebase.auth().onAuthStateChanged(user => {
-                        if (user) {
-                            enterApp(user.email, true);
-                            loadFromCloud(user.uid);
-                        } else {
-                            showAuth();
-                        }
-                    });
-                } else {
-                    // Jika tidak ada internet atau firebase gagal load
-                    skipToOffline();
-                }
-            } catch (e) {
-                console.log("Error init, masuk offline mode");
-                skipToOffline();
-            }
-        });
-st offlineMsg = document.getElementById('offline-msg');
+            const offlineMsg = document.getElementById('offline-msg');
             
             if (!navigator.onLine) {
                 frame.style.display = 'none';
@@ -346,7 +277,7 @@ st offlineMsg = document.getElementById('offline-msg');
             showPage('hadiah');
         }
 
-        // --- GENERIC AD SYSTEM (IFRAME) ---
+        // --- GENERIC AD SYSTEM ---
         function showAd(durationMs, callback) {
             const modal = document.getElementById('ad-modal-save');
             const progress = document.getElementById('ad-progress');
@@ -373,20 +304,13 @@ st offlineMsg = document.getElementById('offline-msg');
             }, intervalStep);
         }
 
-        // --- SAVE FLOW (11 DETIK ADS) ---
+        // --- SAVE FLOW ---
         function initSaveProcess() {
             const n = document.getElementById('m-name').value;
             const d = document.getElementById('m-date').value;
             const a = document.getElementById('m-amount').value;
-            
             if(!n || !d || !a) return showToast("Data tidak lengkap!", "error");
-
-            if(!navigator.onLine) {
-                finalizeSave();
-                return;
-            }
-
-            // Show Ad 11 Detik (11000ms)
+            if(!navigator.onLine) { finalizeSave(); return; }
             showAd(11000, finalizeSave);
         }
 
@@ -394,7 +318,6 @@ st offlineMsg = document.getElementById('offline-msg');
             const n = document.getElementById('m-name').value;
             const d = document.getElementById('m-date').value;
             const a = parseInt(document.getElementById('m-amount').value);
-            
             if(editingId) {
                 const index = transactions.findIndex(t => t.id === editingId);
                 if(index !== -1) transactions[index] = { id: editingId, n, d, a, type: currentMode };
@@ -406,21 +329,15 @@ st offlineMsg = document.getElementById('offline-msg');
             localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
             autoSaveToCloud();
             updateUI(); closeModal();
-            
-            // Auto Refresh
             setTimeout(() => { window.location.reload(); }, 1500);
         }
 
-        // --- DELETE FLOW (5 DETIK ADS) ---
+        // --- DELETE FLOW ---
         function confirmDelete() {
             if(!editingId) return;
             closeModal();
             openConfirm("Hapus Data?", "Setelah hapus wajib tonton iklan 5 detik.", () => {
-                if(!navigator.onLine) {
-                    finalizeDelete();
-                } else {
-                    showAd(5000, finalizeDelete);
-                }
+                if(!navigator.onLine) { finalizeDelete(); } else { showAd(5000, finalizeDelete); }
             });
         }
 
@@ -466,17 +383,16 @@ st offlineMsg = document.getElementById('offline-msg');
         }
 
         // --- AUTH & NAVIGATION ---
-        function showAuth() { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; }
+        function showAuth() { document.getElementById('loading-screen').style.opacity = '0'; setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500); document.getElementById('auth-screen').style.display = 'flex'; }
         
         function skipToOffline() { 
-            document.getElementById('loading-screen').style.display = 'none'; 
-            document.getElementById('auth-screen').style.display = 'none'; 
             enterApp("User Offline", false); 
-            showToast("Masuk Mode Offline", "info"); 
+            showToast("Mode Offline", "info"); 
         }
 
         function enterApp(name, online) {
-            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('loading-screen').style.opacity = '0'; 
+            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-main').style.display = 'block';
             const cleanName = name.includes('@') ? name.split('@')[0] : name;
@@ -581,11 +497,46 @@ st offlineMsg = document.getElementById('offline-msg');
         }
         function closeConfirm() { document.getElementById('confirm-modal').style.display = 'none'; confirmCallback = null; }
         document.getElementById('c-yes-btn').onclick = () => { if(confirmCallback) confirmCallback(); closeConfirm(); };
-    </script>
-    <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
-}
+
+        // --- INIT & LOGIC CEPAT (RACE CONDITION) ---
+        window.addEventListener('load', () => {
+            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+            window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
+            window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
+
+            let appOpened = false;
+            
+            // FUNGSI UTAMA BUKA APLIKASI
+            const startApp = (user = null) => {
+                if(appOpened) return;
+                appOpened = true;
+                if(user) {
+                    enterApp(user.email, true);
+                    loadFromCloud(user.uid);
+                } else {
+                    enterApp("User Offline", false);
+                }
+            };
+
+            // 1. COBA CONNECT FIREBASE (ASAP)
+            try {
+                if (navigator.onLine && typeof firebase !== 'undefined') {
+                    firebase.initializeApp(firebaseConfig);
+                    firebase.auth().onAuthStateChanged(user => {
+                        if(user) startApp(user);
+                        else if(!appOpened) { showAuth(); appOpened = true; }
+                    });
+                }
+            } catch (e) { console.log(e); }
+
+            // 2. TIMEOUT PENGAMAN (2 Detik Max)
+            setTimeout(() => {
+                if(!appOpened) {
+                    console.log("Koneksi lambat, masuk mode offline paksa.");
+                    startApp(null);
+                }
+            }, 2000);
+        });
     </script>
 </body>
 </html>
