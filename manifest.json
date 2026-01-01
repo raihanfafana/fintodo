@@ -1,7 +1,7 @@
 {
   "name": "FinTodo",
   "short_name": "FinTodo",
-  "start_url": "/fintodo/?source=pwa",
+  "start_url": "/fintodo/index.html?source=pwa"
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
