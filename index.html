@@ -289,37 +289,43 @@ if ("serviceWorker" in navigator) {
         let isOnline = navigator.onLine;
         let adCallback = null;
 
-        // --- INIT & LOADING SCREEN (2 DETIK) ---
-        window.addEventListener('DOMContentLoaded', () => {
-            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-            window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
-            window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
-
-            setTimeout(() => {
-                try {
-                    if (navigator.onLine && typeof firebase !== 'undefined') {
-                        firebase.initializeApp(firebaseConfig);
-                        firebase.auth().onAuthStateChanged(user => {
-                            if (user) {
-                                enterApp(user.email, true);
-                                loadFromCloud(user.uid);
-                            } else {
-                                showAuth();
-                            }
-                        });
-                    } else {
-                        skipToOffline();
-                    }
-                } catch (e) {
-                    skipToOffline();
-                }
-            }
-        });
+        
 
         // --- SYSTEM EVENT ---
         function openEventPage() {
             const frame = document.getElementById('event-frame');
-            const offlineMsg = document.getElementById('offline-msg');
+            con        // --- INIT & LOADING SCREEN (VERSI INSTAN / NGEBUT) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Set tema & listener status internet
+            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+            window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
+            window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
+
+            // 2. LANGSUNG JALAN (Tanpa setTimeout)
+            try {
+                // Pastikan script firebase sudah terload
+                if (navigator.onLine && typeof firebase !== 'undefined') {
+                    firebase.initializeApp(firebaseConfig);
+                    
+                    // Cek login user
+                    firebase.auth().onAuthStateChanged(user => {
+                        if (user) {
+                            enterApp(user.email, true);
+                            loadFromCloud(user.uid);
+                        } else {
+                            showAuth();
+                        }
+                    });
+                } else {
+                    // Jika tidak ada internet atau firebase gagal load
+                    skipToOffline();
+                }
+            } catch (e) {
+                console.log("Error init, masuk offline mode");
+                skipToOffline();
+            }
+        });
+st offlineMsg = document.getElementById('offline-msg');
             
             if (!navigator.onLine) {
                 frame.style.display = 'none';
