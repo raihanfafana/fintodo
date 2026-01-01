@@ -1,10 +1,10 @@
 const CACHE_NAME = "fintodo-cache-v1";
 const FILES_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./css/style.css",
-  "./js/app.js"
+  "/fintodo/",
+"/fintodo/index.html",
+"/fintodo/manifest.json",
+"/fintodo/css/style.css",
+"/fintodo/js/app.js"
 ];
 
 self.addEventListener("install", event => {
