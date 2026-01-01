@@ -1,25 +1,22 @@
 {
-  "name": "FinTodo - Catatan Keuangan",
+  "name": "FinTodo",
   "short_name": "FinTodo",
-  "description": "Aplikasi pencatat keuangan sederhana untuk mencatat pemasukan dan pengeluaran harian secara offline maupun online.",
+  "description": "Aplikasi pencatat keuangan sederhana.",
   "start_url": "/fintodo/",
   "scope": "/fintodo/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#121212",
   "theme_color": "#121212",
   "icons": [
     {
       "src": "/fintodo/assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/fintodo/assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
