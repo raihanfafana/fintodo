@@ -304,7 +304,7 @@
             }, intervalStep);
         }
 
-        // --- SAVE FLOW ---
+        // --- SAVE FLOW (TANPA RELOAD) ---
         function initSaveProcess() {
             const n = document.getElementById('m-name').value;
             const d = document.getElementById('m-date').value;
@@ -318,6 +318,8 @@
             const n = document.getElementById('m-name').value;
             const d = document.getElementById('m-date').value;
             const a = parseInt(document.getElementById('m-amount').value);
+            
+            // 1. Update Data di Memory
             if(editingId) {
                 const index = transactions.findIndex(t => t.id === editingId);
                 if(index !== -1) transactions[index] = { id: editingId, n, d, a, type: currentMode };
@@ -326,13 +328,20 @@
                 transactions.unshift({ id: Date.now(), n, d, a, type: currentMode });
                 showToast("Transaksi berhasil disimpan", "success");
             }
+
+            // 2. Simpan ke Storage & Cloud
             localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
             autoSaveToCloud();
-            updateUI(); closeModal();
-            setTimeout(() => { window.location.reload(); }, 1500);
+            
+            // 3. Update Tampilan Langsung (DOM Manipulation)
+            updateUI(); 
+            
+            // 4. Tutup Modal & Bersihkan Input
+            closeModal();
+            // Tidak ada reload() di sini!
         }
 
-        // --- DELETE FLOW ---
+        // --- DELETE FLOW (TANPA RELOAD) ---
         function confirmDelete() {
             if(!editingId) return;
             closeModal();
@@ -342,12 +351,18 @@
         }
 
         function finalizeDelete() {
+            // 1. Hapus Data dari Memory
             transactions = transactions.filter(t => t.id !== editingId);
+            
+            // 2. Simpan Perubahan
             localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
             autoSaveToCloud();
+            
+            // 3. Update Tampilan Langsung
             updateUI();
+            
             showToast("Data dihapus", "success");
-            setTimeout(() => { window.location.reload(); }, 1500);
+            // Tidak ada reload() di sini!
         }
 
         // --- FIREBASE SYNC ---
@@ -538,6 +553,5 @@
             }, 2000);
         });
     </script>
-    <script src="js/app.js" defer></script>
 </body>
 </html>
