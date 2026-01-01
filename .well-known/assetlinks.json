@@ -1,0 +1,11 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fintodo.android",
+      "sha256_cert_fingerprints":
+        ["B9:A9:CB:F5:E9:FC:15:1F:D4:DF:F7:9A:24:F7:96:A0:33:CB:B8:64:F6:2B:D7:E5:C8:31:6D:68:DB:E0:20:7A"]
+    }
+  }
+]
