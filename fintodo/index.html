@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FinTodo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        :root {
+            --bg: #09090b; --card: #18181b; --input: #27272a; --text: #f4f4f5; 
+            --primary: #bef264; --border: rgba(255,255,255,0.1);
+        }
+        .light-mode {
+            --bg: #f8fafc; --card: #ffffff; --input: #f1f5f9; --text: #0f172a; --border: rgba(0,0,0,0.1);
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; -webkit-tap-highlight-color: transparent; transition: 0.3s; }
+
+        /* LOADING SCREEN (CLEAN FULLSCREEN) */
+        #loading-screen { 
+            position: fixed; inset: 0; background: #000; z-index: 9999; 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        #loading-screen img { 
+            width: 100%; height: 100%; object-fit: contain;
+        }
+
+        /* AUTH SCREEN */
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 90; display: none; flex-direction: column; justify-content: center; padding: 24px; }
+        .glass-panel { background: #18181b; border: 1px solid #27272a; border-radius: 24px; padding: 24px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); }
+        
+        /* UI ELEMENTS */
+        .app-input { width: 100%; background: #27272a; color: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; outline: none; border: 1px solid transparent; font-size: 14px; }
+        .app-input:focus { border-color: var(--primary); }
+
+        .btn-primary { width: 100%; background: var(--primary); color: black; font-weight: 800; padding: 16px; border-radius: 12px; margin-top: 8px; font-size: 14px; text-transform: uppercase; }
+        .btn-secondary { width: 100%; background: transparent; color: #71717a; padding: 12px; font-size: 12px; margin-top: 12px; }
+
+        .page { display: none; padding: 20px; height: 100vh; overflow-y: auto; padding-bottom: 100px; }
+        .page.active { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* NAV BAR */
+        .nav-bar { position: fixed; bottom: 20px; left: 16px; right: 16px; height: 70px; background: rgba(24,24,27,0.95); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 50; }
+        .nav-item { text-align: center; color: #71717a; font-size: 10px; font-weight: 700; transition: 0.2s; width: 25%; }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; display: block; }
+
+        .card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); transition: 0.2s; }
+        .card:active { transform: scale(0.98); opacity: 0.8; }
+
+        /* BANNER */
+        .banner-event { 
+            background: linear-gradient(90deg, #bef264, #a3e635); 
+            border-radius: 20px; padding: 16px; margin-bottom: 24px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; box-shadow: 0 10px 20px rgba(190, 242, 100, 0.2);
+            position: relative; overflow: hidden;
+        }
+        
+        /* IFRAME CONTAINER */
+        .iframe-box { 
+            width: 100%; height: calc(100vh - 140px); border: 0; 
+            border-radius: 20px; background: #fff; margin-top: 10px;
+        }
+        
+        /* TOAST */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
+        .toast { background: rgba(24, 24, 27, 0.95); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 12px; display: flex; items-center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .profile-img-big { width: 80px; height: 80px; border-radius: 50%; background: #222; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary); }
+        .profile-img-big img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* AD MODAL SAVE */
+        #ad-modal-save { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .ad-box { background: white; width: 100%; max-width: 320px; border-radius: 20px; position: relative; overflow: hidden; animation: zoomIn 0.3s ease; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ad-timer-bar { width: 100%; height: 6px; background: #eee; position: absolute; top: 0; left: 0; z-index: 10; }
+        .ad-timer-fill { height: 100%; background: #bef264; width: 0%; transition: width 0.1s linear; }
+        
+        .web-ad-frame { width: 100%; height: 100%; border: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div id="loading-screen">
+        <img src="loading.png" alt="Loading">
+    </div>
+
+    <div id="auth-screen">
+        <div class="glass-panel">
+            <div class="flex justify-center mb-6">
+                <img src="logo_app.png" class="w-16 h-16 object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+            </div>
+            <h2 class="text-2xl font-black text-white mb-1 text-center">Selamat Datang</h2>
+            <p class="text-xs text-zinc-400 mb-6 text-center">Login untuk sinkronisasi & event</p>
+            
+            <input type="email" id="email" placeholder="Email" class="app-input">
+            <input type="password" id="password" placeholder="Password" class="app-input">
+            
+            <button onclick="handleAuth()" id="btn-login" class="btn-primary">MASUK / DAFTAR</button>
+            <button onclick="skipToOffline()" class="btn-secondary">Gunakan Mode Offline</button>
+        </div>
+    </div>
+
+    <main id="app-main" style="display: none;">
+        
+        <section id="beranda" class="page active">
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-xl font-black">FinTodo</h1>
+                    <div id="status-badge" class="text-[10px] text-zinc-500 font-bold bg-zinc-800 px-2 py-1 rounded inline-block">OFFLINE</div>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <button onclick="toggleTheme()" class="w-10 h-10 bg-zinc-800 rounded-full text-zinc-400 flex items-center justify-center"><i class="fas fa-moon"></i></button>
+                    <div onclick="showPage('saya')" class="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700 overflow-hidden">
+                        <img src="logo_app.png" class="w-full h-full object-contain p-1" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                    </div>
+                </div>
+            </header>
+
+            <div class="card mb-6 bg-gradient-to-br from-zinc-900 to-black relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 p-4"><img src="logo_app.png" class="w-24 h-24 object-contain" onerror="this.style.display='none'"></div>
+                <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest relative z-10">Total Aset</p>
+                <div class="flex items-baseline gap-1 mt-1 relative z-10">
+                    <span class="text-lime-400 font-bold text-sm">Rp</span>
+                    <h2 id="balance-display" class="text-4xl font-black text-white">0</h2>
+                </div>
+            </div>
+
+            <div onclick="openEventPage()" class="banner-event">
+                <div>
+                    <p class="text-black text-[10px] font-black uppercase mb-1">Event Berhadiah</p>
+                    <h3 class="text-black font-black text-lg leading-tight">Undang Teman<br>Dapat Cuan Hingga<br>Rp 10.000.000!</h3>
+                </div>
+                <div class="w-12 h-12 bg-black/10 rounded-full flex items-center justify-center text-black text-2xl">
+                    <i class="fas fa-gift animate-bounce"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button onclick="openModal('in')" class="card py-6 flex flex-col items-center hover:bg-zinc-800 active:scale-95 transition">
+                    <div class="w-10 h-10 rounded-full bg-lime-400/10 flex items-center justify-center text-lime-400 mb-2"><i class="fas fa-arrow-down"></i></div>
+                    <span class="text-xs font-bold">Pemasukan</span>
+                </button>
+                <button onclick="openModal('out')" class="card py-6 flex flex-col items-center hover:bg-zinc-800 active:scale-95 transition">
+                    <div class="w-10 h-10 rounded-full bg-red-400/10 flex items-center justify-center text-red-400 mb-2"><i class="fas fa-arrow-up"></i></div>
+                    <span class="text-xs font-bold">Pengeluaran</span>
+                </button>
+            </div>
+
+            <h3 class="font-bold text-sm mb-4">Aktifitas Terakhir</h3>
+            <div id="home-history" class="space-y-3"></div>
+        </section>
+
+        <section id="history" class="page">
+            <h2 class="text-2xl font-black mb-6">Riwayat</h2>
+            <div id="full-history" class="space-y-3 pb-20"></div>
+        </section>
+
+        <section id="hadiah" class="page">
+            <div class="flex items-center gap-3 mb-2">
+                <button onclick="showPage('beranda')" class="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-white"><i class="fas fa-chevron-left"></i></button>
+                <h2 class="text-xl font-black text-white">Event Berhadiah</h2>
+            </div>
+            
+            <div id="event-container" class="w-full">
+                <div id="offline-msg" class="hidden flex-col items-center justify-center h-64 text-center">
+                    <i class="fas fa-wifi-slash text-4xl text-zinc-600 mb-4"></i>
+                    <p class="text-sm font-bold text-zinc-500">Anda sedang Offline</p>
+                    <p class="text-xs text-zinc-600">Hubungkan internet untuk buka Event</p>
+                </div>
+                <iframe id="event-frame" src="" class="iframe-box" title="Event Page"></iframe>
+            </div>
+        </section>
+
+        <section id="saya" class="page">
+            <div class="text-center mt-6 mb-10">
+                <div class="profile-img-big">
+                    <img src="logo_app.png" alt="Profile" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                </div>
+                <h2 id="user-display" class="font-bold text-lg">User Offline</h2>
+                <p id="sync-status" class="text-xs text-red-400 mt-1 font-mono">Not Synced</p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="card flex justify-between items-center opacity-75">
+                    <div class="flex items-center gap-3"><i class="fas fa-cloud text-lime-400"></i><span class="text-sm font-bold">Auto Sync (Data App)</span></div>
+                    <span class="text-xs text-lime-400 font-bold">ON</span>
+                </div>
+                <div onclick="logout()" class="card flex justify-between items-center text-red-400 cursor-pointer hover:bg-zinc-800">
+                    <div class="flex items-center gap-3"><i class="fas fa-sign-out-alt"></i><span class="text-sm font-bold">Keluar / Reset</span></div>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center space-y-3 pb-8">
+                <a href="mailto:hanraix.corp@gmail.com" class="block text-xs text-zinc-500 font-bold opacity-60 hover:opacity-100 hover:text-lime-400 transition">Hubungi Kami</a>
+                <a href="https://hanraixcorporation.vercel.app/tentangkami.html" target="_blank" class="inline-block bg-zinc-800 text-lime-400 px-5 py-2.5 rounded-full text-xs font-bold shadow-lg border border-lime-400/20 active:scale-95 transition">
+                    <i class="fas fa-globe mr-2"></i> Tentang Kami
+                </a>
+            </div>
+        </section>
+
+        <nav class="nav-bar">
+            <div onclick="showPage('beranda')" class="nav-item active" id="n-beranda"><i class="fas fa-home"></i>Beranda</div>
+            <div onclick="showPage('history')" class="nav-item" id="n-history"><i class="fas fa-receipt"></i>History</div>
+            <div onclick="openEventPage()" class="nav-item text-lime-400" id="n-hadiah"><i class="fas fa-gift animate-pulse"></i>Hadiah</div>
+            <div onclick="showPage('saya')" class="nav-item" id="n-saya"><i class="fas fa-user"></i>Saya</div>
+        </nav>
+    </main>
+
+    <div id="modal" class="fixed inset-0 bg-black/90 z-[110] hidden items-end backdrop-blur-sm">
+        <div class="bg-zinc-900 w-full p-6 rounded-t-3xl border-t border-zinc-800 animate-[slideUp_0.3s_ease]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="m-title" class="font-black text-xl text-white">Input Data</h3>
+                <button id="btn-delete" onclick="confirmDelete()" class="text-red-500 text-xs font-bold hidden"><i class="fas fa-trash"></i> Hapus</button>
+            </div>
+            
+            <input type="text" id="m-name" placeholder="Keterangan (Contoh: Gaji)" class="app-input">
+            <input type="date" id="m-date" class="app-input">
+            <input type="number" id="m-amount" placeholder="Jumlah (Rp)" class="app-input">
+            
+            <div class="flex gap-4 mt-4">
+                <button onclick="closeModal()" class="flex-1 py-4 font-bold text-zinc-500">Batal</button>
+                <button onclick="initSaveProcess()" id="btn-save" class="flex-[2] bg-lime-400 text-black rounded-xl font-bold">SIMPAN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ad-modal-save" class="fixed inset-0 bg-black/90 z-[200] hidden flex-col items-center justify-center backdrop-blur-md">
+        <div class="bg-white w-[90%] max-w-xs rounded-2xl p-0 relative overflow-hidden ad-box">
+            <div class="ad-timer-bar"><div id="ad-progress" class="ad-timer-fill"></div></div>
+            <div class="p-4">
+                <p class="text-xs font-bold text-gray-500 text-center mb-3">Iklan Sponsor (11 Detik)</p>
+                <div id="ad-wrapper" class="w-full h-32 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                    <iframe src="https://hanraixcorporation.vercel.app/webads.html" class="web-ad-frame"></iframe>
+                </div>
+                <p id="ad-status" class="text-[10px] text-center text-lime-600 font-bold animate-pulse mt-3">Menyimpan Data...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="fixed inset-0 bg-black/90 z-[150] hidden items-center justify-center backdrop-blur-sm">
+        <div class="confirm-box bg-zinc-900 border border-zinc-800 w-[80%] max-w-sm p-6 rounded-2xl animate-[slideUp_0.2s_ease]">
+            <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-4 text-xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="c-title" class="font-bold text-lg text-white mb-2 text-center">Konfirmasi</h3>
+            <p id="c-msg" class="text-sm text-zinc-400 mb-6 text-center">Apakah Anda yakin?</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl bg-zinc-800 text-zinc-400 font-bold text-xs">BATAL</button>
+                <button id="c-yes-btn" class="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold text-xs">YA</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyBg0QQMcMg99tbYpbtLhwbBQWtqTKSpUTA",
+            authDomain: "hanraix-corporation.firebaseapp.com",
+            databaseURL: "https://hanraix-corporation-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "hanraix-corporation",
+            storageBucket: "hanraix-corporation.firebasestorage.app",
+            messagingSenderId: "68676875134",
+            appId: "1:68676875134:web:f56165983d6e48ff33392f"
+        };
+
+        let transactions = JSON.parse(localStorage.getItem('fintodo_final_app')) || [];
+        let currentMode = 'in';
+        let editingId = null;
+        let isOnline = navigator.onLine;
+        let adCallback = null;
+
+        // --- INIT & LOADING SCREEN (2 DETIK) ---
+        window.addEventListener('load', () => {
+            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+            window.addEventListener('online', () => { isOnline = true; updateStatusBadge(); });
+            window.addEventListener('offline', () => { isOnline = false; updateStatusBadge(); });
+
+            setTimeout(() => {
+                try {
+                    if (navigator.onLine && typeof firebase !== 'undefined') {
+                        firebase.initializeApp(firebaseConfig);
+                        firebase.auth().onAuthStateChanged(user => {
+                            if (user) {
+                                enterApp(user.email, true);
+                                loadFromCloud(user.uid);
+                            } else {
+                                showAuth();
+                            }
+                        });
+                    } else {
+                        skipToOffline();
+                    }
+                } catch (e) {
+                    skipToOffline();
+                }
+            }, 2000); // 2 DETIK
+        });
+
+        // --- SYSTEM EVENT ---
+        function openEventPage() {
+            const frame = document.getElementById('event-frame');
+            const offlineMsg = document.getElementById('offline-msg');
+            
+            if (!navigator.onLine) {
+                frame.style.display = 'none';
+                offlineMsg.style.display = 'flex';
+                showPage('hadiah');
+                return;
+            }
+
+            frame.style.display = 'block';
+            offlineMsg.style.display = 'none';
+
+            let baseUrl = "https://hanraixcorporation.vercel.app/event.html";
+            if (isOnline && typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+                const user = firebase.auth().currentUser;
+                baseUrl += `?uid=${user.uid}&email=${encodeURIComponent(user.email)}`;
+            }
+            frame.src = baseUrl;
+            showPage('hadiah');
+        }
+
+        // --- GENERIC AD SYSTEM (IFRAME) ---
+        function showAd(durationMs, callback) {
+            const modal = document.getElementById('ad-modal-save');
+            const progress = document.getElementById('ad-progress');
+            const status = document.getElementById('ad-status');
+            
+            adCallback = callback;
+            modal.style.display = 'flex';
+            progress.style.width = '0%';
+            status.innerText = "Memuat Iklan...";
+
+            let width = 0;
+            const intervalStep = 50; 
+            const stepIncrement = (intervalStep / durationMs) * 100;
+
+            const timer = setInterval(() => {
+                width += stepIncrement;
+                progress.style.width = width + '%';
+                
+                if (width >= 100) { 
+                    clearInterval(timer);
+                    modal.style.display = 'none';
+                    if (adCallback) adCallback();
+                }
+            }, intervalStep);
+        }
+
+        // --- SAVE FLOW (11 DETIK ADS) ---
+        function initSaveProcess() {
+            const n = document.getElementById('m-name').value;
+            const d = document.getElementById('m-date').value;
+            const a = document.getElementById('m-amount').value;
+            
+            if(!n || !d || !a) return showToast("Data tidak lengkap!", "error");
+
+            if(!navigator.onLine) {
+                finalizeSave();
+                return;
+            }
+
+            // Show Ad 11 Detik (11000ms)
+            showAd(11000, finalizeSave);
+        }
+
+        function finalizeSave() {
+            const n = document.getElementById('m-name').value;
+            const d = document.getElementById('m-date').value;
+            const a = parseInt(document.getElementById('m-amount').value);
+            
+            if(editingId) {
+                const index = transactions.findIndex(t => t.id === editingId);
+                if(index !== -1) transactions[index] = { id: editingId, n, d, a, type: currentMode };
+                showToast("Data diupdate", "success");
+            } else {
+                transactions.unshift({ id: Date.now(), n, d, a, type: currentMode });
+                showToast("Transaksi berhasil disimpan", "success");
+            }
+            localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
+            autoSaveToCloud();
+            updateUI(); closeModal();
+            
+            // Auto Refresh
+            setTimeout(() => { window.location.reload(); }, 1500);
+        }
+
+        // --- DELETE FLOW (5 DETIK ADS) ---
+        function confirmDelete() {
+            if(!editingId) return;
+            closeModal();
+            openConfirm("Hapus Data?", "Setelah hapus wajib tonton iklan 5 detik.", () => {
+                if(!navigator.onLine) {
+                    finalizeDelete();
+                } else {
+                    showAd(5000, finalizeDelete);
+                }
+            });
+        }
+
+        function finalizeDelete() {
+            transactions = transactions.filter(t => t.id !== editingId);
+            localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
+            autoSaveToCloud();
+            updateUI();
+            showToast("Data dihapus", "success");
+            setTimeout(() => { window.location.reload(); }, 1500);
+        }
+
+        // --- FIREBASE SYNC ---
+        function autoSaveToCloud() {
+            if(isOnline && typeof firebase !== 'undefined' && firebase.auth().currentUser) {
+                const uid = firebase.auth().currentUser.uid;
+                firebase.database().ref('users/' + uid + '/app_data').set({
+                    transactions: transactions,
+                    last_sync: new Date().toISOString()
+                });
+            }
+        }
+
+        function loadFromCloud(uid) {
+             firebase.database().ref('users/' + uid + '/app_data').once('value', (snapshot) => {
+                const val = snapshot.val();
+                if(val && val.transactions) {
+                    transactions = val.transactions;
+                    localStorage.setItem('fintodo_final_app', JSON.stringify(transactions));
+                    updateUI();
+                    showToast("Data Disinkronkan", "success");
+                }
+             });
+        }
+
+        function updateStatusBadge() {
+            const badge = document.getElementById('status-badge');
+            if(navigator.onLine) {
+                badge.innerText = "ONLINE"; badge.className = "text-[10px] text-lime-400 font-bold bg-lime-400/10 px-2 py-1 rounded inline-block";
+            } else {
+                badge.innerText = "OFFLINE"; badge.className = "text-[10px] text-zinc-500 font-bold bg-zinc-800 px-2 py-1 rounded inline-block";
+            }
+        }
+
+        // --- AUTH & NAVIGATION ---
+        function showAuth() { document.getElementById('loading-screen').style.display = 'none'; document.getElementById('auth-screen').style.display = 'flex'; }
+        
+        function skipToOffline() { 
+            document.getElementById('loading-screen').style.display = 'none'; 
+            document.getElementById('auth-screen').style.display = 'none'; 
+            enterApp("User Offline", false); 
+            showToast("Masuk Mode Offline", "info"); 
+        }
+
+        function enterApp(name, online) {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-main').style.display = 'block';
+            const cleanName = name.includes('@') ? name.split('@')[0] : name;
+            document.getElementById('user-display').innerText = cleanName;
+            if(online) {
+                isOnline = true; updateStatusBadge();
+                document.getElementById('sync-status').innerText = "Cloud Connected";
+                document.getElementById('sync-status').className = "text-xs text-lime-400 mt-1";
+            }
+            updateUI();
+        }
+
+        function handleAuth() {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('password').value;
+            const btn = document.getElementById('btn-login');
+            if(!e || !p) return showToast("Isi email & password", "error");
+            btn.innerText = "MEMPROSES...";
+            firebase.auth().signInWithEmailAndPassword(e, p).catch(err => {
+                if(err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                     return firebase.auth().createUserWithEmailAndPassword(e, p)
+                        .then(() => showToast("Akun dibuat!", "success"))
+                        .catch(regErr => { showToast(regErr.message, "error"); btn.innerText = "MASUK / DAFTAR"; });
+                } else { showToast(err.message, "error"); btn.innerText = "MASUK / DAFTAR"; }
+            });
+        }
+
+        function logout() {
+            openConfirm("Keluar?", "Data lokal akan di-reset.", () => {
+                if(isOnline && typeof firebase !== 'undefined') firebase.auth().signOut();
+                localStorage.removeItem('fintodo_final_app'); 
+                window.location.reload();
+            });
+        }
+
+        // --- CRUD UI ---
+        function prepareEdit(id) {
+            const tx = transactions.find(t => t.id === id);
+            if(!tx) return;
+            editingId = id; currentMode = tx.type;
+            document.getElementById('m-name').value = tx.n;
+            document.getElementById('m-date').value = tx.d;
+            document.getElementById('m-amount').value = tx.a;
+            document.getElementById('m-title').innerText = "Edit Transaksi";
+            document.getElementById('btn-save').innerText = "UPDATE";
+            document.getElementById('btn-delete').style.display = "block";
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function updateUI() {
+            const total = transactions.reduce((acc, c) => c.type === 'in' ? acc + c.a : acc - c.a, 0);
+            document.getElementById('balance-display').innerText = total.toLocaleString('id-ID');
+            const render = (elId, data) => {
+                const el = document.getElementById(elId); el.innerHTML = '';
+                if(!data.length) { el.innerHTML = '<div class="text-center py-8 opacity-50 text-xs">Belum ada data</div>'; return; }
+                data.forEach(t => {
+                    const isIn = t.type === 'in';
+                    el.innerHTML += `
+                    <div class="card flex justify-between items-center mb-2 py-4 cursor-pointer hover:bg-zinc-800" onclick="prepareEdit(${t.id})">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center ${isIn ? 'bg-lime-400/10 text-lime-400' : 'bg-red-400/10 text-red-400'}"><i class="fas ${isIn ? 'fa-arrow-down' : 'fa-arrow-up'}"></i></div>
+                            <div><div class="font-bold text-sm">${t.n}</div><div class="text-[10px] text-zinc-500 uppercase">${t.d}</div></div>
+                        </div>
+                        <div class="font-black text-sm ${isIn ? 'text-lime-400' : 'text-red-400'}">${isIn ? '+' : '-'} ${t.a.toLocaleString('id-ID')}</div>
+                    </div>`;
+                });
+            };
+            render('home-history', transactions.slice(0,3));
+            render('full-history', transactions);
+        }
+
+        function openModal(mode) { 
+            editingId = null; currentMode = mode;
+            document.getElementById('m-name').value = ''; document.getElementById('m-amount').value = '';
+            document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('m-title').innerText = mode === 'in' ? 'Pemasukan' : 'Pengeluaran';
+            document.getElementById('btn-save').innerText = "SIMPAN"; document.getElementById('btn-delete').style.display = "none";
+            document.getElementById('modal').style.display = 'flex'; 
+        }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'hadiah') document.getElementById('n-hadiah').classList.add('active');
+            else document.getElementById('n-'+id).classList.add('active');
+        }
+        
+        function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
+        
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toast-container'); const t = document.createElement('div');
+            let icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
+            t.className = `toast ${type}`; t.innerHTML = `<i class="fas ${icon}"></i><span class="text-xs font-bold">${msg}</span>`;
+            c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+        let confirmCallback = null;
+        function openConfirm(title, msg, callback) {
+            document.getElementById('c-title').innerText = title; document.getElementById('c-msg').innerText = msg;
+            confirmCallback = callback; document.getElementById('confirm-modal').style.display = 'flex';
+        }
+        function closeConfirm() { document.getElementById('confirm-modal').style.display = 'none'; confirmCallback = null; }
+        document.getElementById('c-yes-btn').onclick = () => { if(confirmCallback) confirmCallback(); closeConfirm(); };
+    </script>
+</body>
+</html>
