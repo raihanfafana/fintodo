@@ -571,5 +571,10 @@
         function closeConfirm() { document.getElementById('confirm-modal').style.display = 'none'; confirmCallback = null; }
         document.getElementById('c-yes-btn').onclick = () => { if(confirmCallback) confirmCallback(); closeConfirm(); };
     </script>
+    <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+    </script>
 </body>
 </html>
