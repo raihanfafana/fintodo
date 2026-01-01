@@ -1,4 +1,4 @@
-const CACHE_NAME = "fintodo-cache-v1";
+const CACHE_NAME = "fintodo-cache-v3";
 const FILES_TO_CACHE = [
   "/fintodo/",
   "/fintodo/index.html",
