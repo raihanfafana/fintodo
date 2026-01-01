@@ -1,12 +1,10 @@
 {
-  "name": "FinTodo",
+  "name": "FinTodo - Catatan Keuangan",
   "short_name": "FinTodo",
-  "description": "Aplikasi pencatatan keuangan sederhana dan modern",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#22c55e",
-  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#0f0f0f",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
